@@ -1,6 +1,4 @@
-#include <RobotIRremote.h>
-#include <RobotIRremoteInt.h>
-#include <RobotIRremoteTools.h>
+#include <IRremote.h>
 
 #include <Servo.h> 
 
@@ -43,12 +41,16 @@ void setup() {
   servoLook.attach(A2);       //assigns servo pin
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
-
+  
+  IrReceiver.begin(IR_PIN, true);
+  
   stopMove();
+
+  Serial.begin(9600);
 }
 
 void loop() {
-  if (IrReceiver.decode()) {
+  /*if (IrReceiver.decode()) {
     switch (IrReceiver.decodedIRData.command) {
       case OK:
         Serial.println("OK");
@@ -58,7 +60,7 @@ void loop() {
         break;
     }
     IrReceiver.resume();
-  }
+  }*/
   servoLook.write(90);        //set servo to look straight ahead
   delay(750);
   int distance = getDistance();   //check that there are no objects
