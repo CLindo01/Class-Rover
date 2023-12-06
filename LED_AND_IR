@@ -1,0 +1,27 @@
+#define LedPin 13  // Added LED pin definition
+
+const int IR_PIN = 12;
+
+enum BTN {
+  PWR,
+};
+
+void setup() {
+  IrReceiver.begin(IR_PIN, true);
+  pinMode(LedPin, OUTPUT);
+}
+
+void loop() {
+    if (IrReceiver.decode()) {
+    switch (IrReceiver.decodedIRData.command) {
+      case PWR:
+        Serial.println("OK");
+        digitalWrite(LedPin, HIGH);
+        break;
+      default:
+        Serial.println("Unknown command");
+        break;
+    }
+    IrReceiver.resume();
+  }
+}
