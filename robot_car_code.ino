@@ -36,56 +36,24 @@ void setup() {
 }
 
 void loop() {
-  unsigned long startTime = millis(); // for tracking time
+  unsigned long startTime = millis();
+  unsigned long obstacleCheckTime = millis(); // Timer for obstacle checks
   bool obstacleDetected = false;
-  bool checkedSurroundings = false; // Flag to track if surroundings have been checked
 
   while (millis() - startTime < 4000) { // Stop if robot travels for 4 seconds without stopping
-    servoLook.write(90); // set servo to look straight ahead
-    delay(750);
-    int distance = getDistance(); // check that there are no objects
+    int distance = getDistance(); // check for obstacles
 
-    if (distance >= stopDist && !checkedSurroundings) { // Check surroundings only if not already checked
-      moveForward();
-      unsigned long moveStartTime = millis(); // track time when robot moves
+    if (distance < stopDist) {
+      obstacleDetected = true;
+      stopMove(); // Stop if an obstacle is detected
+      delay(1000); // Wait for 1 second after stopping
 
-      while (millis() - moveStartTime < 2000) { // continue checking surroundings for 2 seconds after moving
-        distance = getDistance();
-        if (distance < stopDist) {
-          obstacleDetected = true;
-          stopMove(); // Stop if an obstacle is detected within 2 seconds of moving
-          delay(1000); // Wait for 1 second after stopping
-          int turnDir = checkDirection(); // Check surroundings in all directions
-          Serial.print(turnDir);
-          switch (turnDir) { // Turn left, reverse, or turn right
-            case 0: // turn left
-              turnLeft(400);
-              delay(1000); // additional delay after turning left
-              break;
-            case 1: // reverse
-              moveBackward();
-              delay(2000); // reverse for 2 seconds
-              stopMove(); // stop after reversing
-              break;
-            case 2: // turn right
-              turnRight(400);
-              delay(1000); // additional delay after turning right
-              break;
-          }
-          obstacleDetected = false; // Reset obstacle detection for the next cycle
-          checkedSurroundings = true; // Set flag to indicate surroundings have been checked
-          break; // Exit the while loop after taking action
-        }
-        delay(250);
-      }
-    } else if (!obstacleDetected) {
-      stopMove(); // Stops motors if an obstacle is detected initially
-      int turnDir = checkDirection(); // checks left and right
+      int turnDir = checkDirection(); // Check surroundings in all directions
       Serial.print(turnDir);
       switch (turnDir) { // Turn left, reverse, or turn right
         case 0: // turn left
           turnLeft(400);
-          delay(1000); // additional delay after turning left
+          delay(100); // additional delay after turning left
           break;
         case 1: // reverse
           moveBackward();
@@ -94,10 +62,19 @@ void loop() {
           break;
         case 2: // turn right
           turnRight(400);
-          delay(1000); // additional delay after turning right
+          delay(100); // additional delay after turning right
           break;
       }
-      break; // exit loop after taking one action
+
+      obstacleDetected = false; // Reset obstacle detection for the next cycle
+      obstacleCheckTime = millis(); // Reset the timer after taking action
+    }
+
+    // Check for obstacles every 2 seconds
+    if (millis() - obstacleCheckTime >= 2000) {
+      obstacleCheckTime = millis(); // Reset the timer
+      obstacleDetected = false; // Reset obstacle detection
+      moveForward(); // Resume moving forward
     }
   }
   // If the robot has traveled for 4 seconds without stopping, end program
